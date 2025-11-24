@@ -255,12 +255,20 @@ public class AdminDashboard extends JFrame {
                     return;
                 }
                 
-                parkingService.addSpot(new ParkingSpot(spotId, hourlyRate));
+                boolean success = parkingService.addSpot(new ParkingSpot(spotId, hourlyRate));
                 loadSpotsData();
-                JOptionPane.showMessageDialog(this, 
-                    "Spot added successfully!", 
-                    "Success", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Spot added successfully!", 
+                        "Success", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                        "Spot " + spotId + " already exists!", 
+                        "Warning", 
+                        JOptionPane.WARNING_MESSAGE);
+                }
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, 
                     "Invalid input!", 

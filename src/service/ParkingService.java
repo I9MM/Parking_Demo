@@ -37,14 +37,14 @@ public class ParkingService {
         }
     }
 
-    public void addSpot(ParkingSpot spot) throws UnauthorizedException {
+    public boolean addSpot(ParkingSpot spot) throws UnauthorizedException {
         authService.checkPermission(Permission.ADD_PARKING_SPOT);
         
         // Check if spot already exists
         for (ParkingSpot s : spots) {
             if (s.getSpotId() == spot.getSpotId()) {
                 System.out.println("Spot " + spot.getSpotId() + " already exists!");
-                return;
+                return false;
             }
         }
         
@@ -52,8 +52,10 @@ public class ParkingService {
         try {
             spotRepository.save(spot);
             System.out.println("Parking spot " + spot.getSpotId() + " added successfully");
+            return true;
         } catch (IOException e) {
             System.out.println("Error saving parking spot: " + e.getMessage());
+            return false;
         }
     }
     

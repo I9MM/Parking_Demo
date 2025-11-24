@@ -116,7 +116,7 @@ public class ExitOperatorDashboard extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Table
-        String[] columns = {"Ticket ID", "Plate Number", "Owner", "Entry Time", "Amount (EGP)"};
+        String[] columns = {"Ticket ID", "Spot ID", "Rate (EGP/hr)", "Plate Number", "Owner", "Entry Time", "Amount (EGP)"};
         invoicesModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -218,13 +218,25 @@ public class ExitOperatorDashboard extends JFrame {
         try {
             List<Ticket> tickets = parkingService.getAllTicketsForExit();
             for (Ticket ticket : tickets) {
+                // Get spot to get hourly rate
+                ParkingSpot spot = null;
+                for (ParkingSpot s : parkingService.getAllSpots()) {
+                    if (s.getSpotId() == ticket.getSpotId()) {
+                        spot = s;
+                        break;
+                    }
+                }
+                
+                double hourlyRate = spot != null ? spot.getHourlyRate() : 5.0;
                 double amount = ticket.getPayment();
                 if (amount == 0) {
-                    amount = ticket.calculatePayment();
+                    amount = ticket.calculatePayment(hourlyRate);
                 }
                 
                 Object[] row = {
                     ticket.getEntryId(),
+                    ticket.getSpotId(),
+                    String.format("%.2f", hourlyRate),
                     ticket.getCar().getPlateNumber(),
                     ticket.getCar().getOwnerName(),
                     ticket.getTimeIn().toString().substring(0, 16),

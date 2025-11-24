@@ -53,7 +53,7 @@ public class EntryOperatorDashboard extends JFrame {
         JPanel spotsPanel = new JPanel(new BorderLayout());
         spotsPanel.setBorder(BorderFactory.createTitledBorder("Available Parking Spots"));
         
-        String[] columns = {"Spot ID", "Status"};
+        String[] columns = {"Spot ID", "Status", "Rate (EGP/hr)"};
         spotsModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -162,7 +162,7 @@ public class EntryOperatorDashboard extends JFrame {
         List<ParkingSpot> spots = parkingService.getAllSpots();
         for (ParkingSpot spot : spots) {
             if (!spot.isOccupied()) {
-                combo.addItem("Spot " + spot.getSpotId());
+                combo.addItem("Spot " + spot.getSpotId() + " (" + String.format("%.2f", spot.getHourlyRate()) + " EGP/hr)");
             }
         }
     }
@@ -172,7 +172,7 @@ public class EntryOperatorDashboard extends JFrame {
         List<ParkingSpot> spots = parkingService.getAllSpots();
         for (ParkingSpot spot : spots) {
             if (!spot.isOccupied()) {
-                Object[] row = {spot.getSpotId(), "Free"};
+                Object[] row = {spot.getSpotId(), "Free", String.format("%.2f", spot.getHourlyRate())};
                 spotsModel.addRow(row);
             }
         }
@@ -209,7 +209,9 @@ public class EntryOperatorDashboard extends JFrame {
                     return;
                 }
                 
-                int spotId = Integer.parseInt(selected.replace("Spot ", ""));
+                // Extract spot ID from "Spot 101 (5.00 EGP/hr)" format
+                String spotIdStr = selected.substring(selected.indexOf("Spot ") + 5, selected.indexOf(" ("));
+                int spotId = Integer.parseInt(spotIdStr.trim());
                 spot = null;
                 for (ParkingSpot s : parkingService.getAllSpots()) {
                     if (s.getSpotId() == spotId && !s.isOccupied()) {

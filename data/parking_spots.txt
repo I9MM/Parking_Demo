@@ -1,5 +1,5 @@
-101,true
-102,true
-103,false
-105,false
-90,false
+101,true,90.0
+102,false,10.0
+103,false,8.69
+104,false,69.0
+105,false,0.0
