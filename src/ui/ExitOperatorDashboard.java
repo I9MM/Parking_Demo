@@ -18,6 +18,8 @@ public class ExitOperatorDashboard extends JFrame {
     private JTable invoicesTable;
     private DefaultTableModel invoicesModel;
     private JLabel totalAmountLabel;
+    private JButton confirmPaymentButton;
+    private int currentTicketId = -1;
 
     public ExitOperatorDashboard(ParkingService parkingService, ExitOperator operator) {
         this.parkingService = parkingService;
@@ -90,6 +92,18 @@ public class ExitOperatorDashboard extends JFrame {
         detailsArea.setBackground(new Color(236, 240, 241));
         JScrollPane scrollPane = new JScrollPane(detailsArea);
         detailsPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Confirm Payment Button
+        confirmPaymentButton = new JButton("تأكيد الدفع - Confirm Payment");
+        confirmPaymentButton.setBackground(new Color(39, 174, 96));
+        confirmPaymentButton.setForeground(Color.WHITE);
+        confirmPaymentButton.setFont(new Font("Arial", Font.BOLD, 14));
+        confirmPaymentButton.setEnabled(false);
+        confirmPaymentButton.addActionListener(e -> confirmPayment());
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(confirmPaymentButton);
+        detailsPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         mainPanel.add(detailsPanel, BorderLayout.CENTER);
         
@@ -147,12 +161,14 @@ public class ExitOperatorDashboard extends JFrame {
             
             if (ticket != null) {
                 double payment = operator.processPayment(ticket);
+                currentTicketId = ticketId;
                 
                 StringBuilder details = new StringBuilder();
                 details.append("========================================\n");
                 details.append("           PARKING INVOICE\n");
                 details.append("========================================\n\n");
                 details.append("Ticket ID:      ").append(ticket.getEntryId()).append("\n");
+                details.append("Parking Spot:   ").append(ticket.getSpotId()).append("\n");
                 details.append("Plate Number:   ").append(ticket.getCar().getPlateNumber()).append("\n");
                 details.append("Owner Name:     ").append(ticket.getCar().getOwnerName()).append("\n");
                 details.append("National ID:    ").append(ticket.getCar().getNId()).append("\n");
@@ -160,16 +176,11 @@ public class ExitOperatorDashboard extends JFrame {
                 details.append("\n----------------------------------------\n");
                 details.append("PAYMENT AMOUNT: ").append(String.format("%.2f EGP", payment)).append("\n");
                 details.append("----------------------------------------\n");
+                details.append("\n⚠ انقر على 'تأكيد الدفع' لإتمام العملية\n");
+                details.append("Click 'Confirm Payment' to complete\n");
                 
                 detailsArea.setText(details.toString());
-                
-                JOptionPane.showMessageDialog(this, 
-                    String.format("Payment: %.2f EGP\nThank you!", payment), 
-                    "Payment Processed", 
-                    JOptionPane.INFORMATION_MESSAGE);
-                
-                ticketIdField.setText("");
-                loadInvoices(); // Refresh invoices list
+                confirmPaymentButton.setEnabled(true);
             } else {
                 JOptionPane.showMessageDialog(this, 
                     "Ticket not found!", 
@@ -217,6 +228,38 @@ public class ExitOperatorDashboard extends JFrame {
         }
     }
 
+    private void confirmPayment() {
+        if (currentTicketId == -1) {
+            JOptionPane.showMessageDialog(this,
+                "لا توجد عملية دفع جارية!\nNo payment in progress!",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        try {
+            parkingService.confirmPayment(currentTicketId);
+            
+            JOptionPane.showMessageDialog(this,
+                "تم تأكيد الدفع بنجاح!\nتم تحرير موقف السيارة\n\nPayment confirmed successfully!\nParking spot released!",
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            // Reset
+            detailsArea.setText("");
+            ticketIdField.setText("");
+            confirmPaymentButton.setEnabled(false);
+            currentTicketId = -1;
+            loadInvoices();
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "خطأ في تأكيد الدفع: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
     private void logout() {
         AuthorizationService.getInstance().logout();
         new LoginFrame(parkingService).setVisible(true);

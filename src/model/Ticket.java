@@ -13,6 +13,7 @@ public class Ticket implements Serializable {
     private LocalDateTime timeIn;
     private LocalDateTime timeOut;
     private double payment;
+    private int spotId;
 
     public Ticket(Car car) {
         this.entryId = counter++;
@@ -33,4 +34,7 @@ public class Ticket implements Serializable {
     public LocalDateTime getTimeIn() { return timeIn; }
     public void setTimeOut(LocalDateTime timeOut) { this.timeOut = timeOut; }
     public double getPayment() { return payment; }
+    
+    public int getSpotId() { return spotId; }
+    public void setSpotId(int spotId) { this.spotId = spotId; }
 }

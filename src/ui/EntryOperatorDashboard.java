@@ -222,6 +222,7 @@ public class EntryOperatorDashboard extends JFrame {
             
             if (spot != null) {
                 Ticket ticket = new Ticket(car);
+                ticket.setSpotId(spot.getSpotId()); // Save spot ID to ticket
                 parkingService.assignTicket(ticket);
                 
                 JOptionPane.showMessageDialog(this, 

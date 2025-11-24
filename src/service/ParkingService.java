@@ -166,4 +166,35 @@ public class ParkingService {
             }
         }
     }
+    
+    public void confirmPayment(int ticketId) throws UnauthorizedException {
+        authService.checkPermission(Permission.PROCESS_EXIT);
+        
+        Ticket ticket = findTicketById(ticketId);
+        if (ticket != null) {
+            // Release the parking spot
+            int spotId = ticket.getSpotId();
+            for (ParkingSpot spot : spots) {
+                if (spot.getSpotId() == spotId) {
+                    spot.release();
+                    try {
+                        spotRepository.saveAll(spots);
+                        System.out.println("Spot " + spotId + " released");
+                    } catch (IOException e) {
+                        System.out.println("Error releasing spot: " + e.getMessage());
+                    }
+                    break;
+                }
+            }
+            
+            // Remove the ticket from active tickets
+            tickets.remove(ticket);
+            try {
+                ticketRepository.saveAll(tickets);
+                System.out.println("Payment confirmed for ticket " + ticketId);
+            } catch (IOException e) {
+                System.out.println("Error removing ticket: " + e.getMessage());
+            }
+        }
+    }
 }
