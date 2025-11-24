@@ -1,0 +1,5 @@
+1,admin,admin123,admin
+2,mohamed_ali,entry123,entry_operator
+3,sara_ahmed,exit123,exit_operator
+4,khaled_hassan,entry456,entry_operator
+5,fatma_mohamed,exit456,exit_operator
