@@ -197,4 +197,8 @@ public class ParkingService {
             }
         }
     }
+    
+    public void saveSpotsData() throws IOException {
+        spotRepository.saveAll(spots);
+    }
 }

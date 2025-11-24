@@ -21,19 +21,26 @@ public class Ticket implements Serializable {
         this.timeIn = LocalDateTime.now();
     }
 
-    public double calculatePayment() {
+    public double calculatePayment(double hourlyRate) {
         if (timeOut == null) timeOut = LocalDateTime.now();
         Duration duration = Duration.between(timeIn, timeOut);
         long hours = duration.toHours() + 1; // round up
-        payment = hours * 5; // مثال: 5 units per hour
+        payment = hours * hourlyRate;
         return payment;
+    }
+    
+    // For backward compatibility
+    public double calculatePayment() {
+        return calculatePayment(5.0); // Default rate
     }
 
     public int getEntryId() { return entryId; }
     public Car getCar() { return car; }
     public LocalDateTime getTimeIn() { return timeIn; }
+    public LocalDateTime getTimeOut() { return timeOut; }
     public void setTimeOut(LocalDateTime timeOut) { this.timeOut = timeOut; }
     public double getPayment() { return payment; }
+    public void setPayment(double payment) { this.payment = payment; }
     
     public int getSpotId() { return spotId; }
     public void setSpotId(int spotId) { this.spotId = spotId; }

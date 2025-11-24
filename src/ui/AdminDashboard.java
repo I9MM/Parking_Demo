@@ -72,7 +72,7 @@ public class AdminDashboard extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Table
-        String[] columns = {"Spot ID", "Status"};
+        String[] columns = {"Spot ID", "Status", "Hourly Rate (EGP)"};
         spotsModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -96,11 +96,17 @@ public class AdminDashboard extends JFrame {
         removeButton.setForeground(Color.WHITE);
         removeButton.addActionListener(e -> removeParkingSpot());
         
+        JButton editRateButton = new JButton("Edit Rate");
+        editRateButton.setBackground(new Color(52, 152, 219));
+        editRateButton.setForeground(Color.WHITE);
+        editRateButton.addActionListener(e -> editSpotRate());
+        
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> loadSpotsData());
         
         buttonPanel.add(addButton);
         buttonPanel.add(removeButton);
+        buttonPanel.add(editRateButton);
         buttonPanel.add(refreshButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -194,7 +200,8 @@ public class AdminDashboard extends JFrame {
         for (ParkingSpot spot : spots) {
             Object[] row = {
                 spot.getSpotId(),
-                spot.isOccupied() ? "Occupied" : "Free"
+                spot.isOccupied() ? "Occupied" : "Free",
+                String.format("%.2f", spot.getHourlyRate())
             };
             spotsModel.addRow(row);
         }
@@ -223,11 +230,32 @@ public class AdminDashboard extends JFrame {
     }
 
     private void addParkingSpot() {
-        String spotIdStr = JOptionPane.showInputDialog(this, "Enter Spot ID:");
-        if (spotIdStr != null && !spotIdStr.trim().isEmpty()) {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 5, 5));
+        JTextField spotIdField = new JTextField();
+        JTextField hourlyRateField = new JTextField("5.0");
+        
+        panel.add(new JLabel("Spot ID:"));
+        panel.add(spotIdField);
+        panel.add(new JLabel("Hourly Rate (EGP):"));
+        panel.add(hourlyRateField);
+        
+        int result = JOptionPane.showConfirmDialog(this, panel, 
+            "Add New Parking Spot", JOptionPane.OK_CANCEL_OPTION);
+            
+        if (result == JOptionPane.OK_OPTION) {
             try {
-                int spotId = Integer.parseInt(spotIdStr);
-                parkingService.addSpot(new ParkingSpot(spotId));
+                int spotId = Integer.parseInt(spotIdField.getText().trim());
+                double hourlyRate = Double.parseDouble(hourlyRateField.getText().trim());
+                
+                if (hourlyRate < 0) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Hourly rate cannot be negative!", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                parkingService.addSpot(new ParkingSpot(spotId, hourlyRate));
                 loadSpotsData();
                 JOptionPane.showMessageDialog(this, 
                     "Spot added successfully!", 
@@ -235,7 +263,7 @@ public class AdminDashboard extends JFrame {
                     JOptionPane.INFORMATION_MESSAGE);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, 
-                    "Invalid spot ID!", 
+                    "Invalid input!", 
                     "Error", 
                     JOptionPane.ERROR_MESSAGE);
             } catch (UnauthorizedException e) {
@@ -437,6 +465,68 @@ public class AdminDashboard extends JFrame {
             } catch (UnauthorizedException e) {
                 JOptionPane.showMessageDialog(this, 
                     "Error: " + e.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void editSpotRate() {
+        int selectedRow = spotsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, 
+                "Please select a spot to edit!", 
+                "Warning", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        int spotId = (int) spotsModel.getValueAt(selectedRow, 0);
+        String currentRate = (String) spotsModel.getValueAt(selectedRow, 2);
+        
+        String newRateStr = JOptionPane.showInputDialog(this, 
+            "Enter new hourly rate for Spot " + spotId + ":", 
+            currentRate);
+            
+        if (newRateStr != null && !newRateStr.trim().isEmpty()) {
+            try {
+                double newRate = Double.parseDouble(newRateStr);
+                if (newRate < 0) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Rate cannot be negative!", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Update the spot rate
+                List<ParkingSpot> spots = parkingService.getAllSpots();
+                for (ParkingSpot spot : spots) {
+                    if (spot.getSpotId() == spotId) {
+                        spot.setHourlyRate(newRate);
+                        break;
+                    }
+                }
+                
+                // Save changes to file
+                try {
+                    parkingService.saveSpotsData();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Error saving changes: " + ex.getMessage(), 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                loadSpotsData();
+                JOptionPane.showMessageDialog(this, 
+                    "Rate updated successfully!", 
+                    "Success", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Invalid rate value!", 
                     "Error", 
                     JOptionPane.ERROR_MESSAGE);
             }

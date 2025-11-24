@@ -10,14 +10,19 @@ public class ExitOperator extends User {
         super(id, name, password, Role.EXIT_OPERATOR);
     }
 
-    public double processPayment(Ticket ticket) {
+    public double processPayment(Ticket ticket, double hourlyRate) {
         try {
             AuthorizationService.getInstance().checkPermission(Permission.CALCULATE_PAYMENT);
-            return ticket.calculatePayment();
+            return ticket.calculatePayment(hourlyRate);
         } catch (UnauthorizedException e) {
             System.out.println("Error: " + e.getMessage());
             return 0;
         }
+    }
+    
+    // For backward compatibility
+    public double processPayment(Ticket ticket) {
+        return processPayment(ticket, 5.0);
     }
     
     public void processExit(ParkingService parkingService, int ticketId) {

@@ -43,8 +43,8 @@ public class ParkingSpotRepository implements Repository<ParkingSpot> {
     public void saveAll(List<ParkingSpot> entities) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
             for (ParkingSpot spot : entities) {
-                // Format: spotId,isOccupied
-                writer.write(spot.getSpotId() + "," + spot.isOccupied());
+                // Format: spotId,isOccupied,hourlyRate
+                writer.write(spot.getSpotId() + "," + spot.isOccupied() + "," + spot.getHourlyRate());
                 writer.newLine();
             }
         }
@@ -64,11 +64,12 @@ public class ParkingSpotRepository implements Repository<ParkingSpot> {
                 if (line.trim().isEmpty()) continue;
                 
                 String[] parts = line.split(",");
-                if (parts.length == 2) {
+                if (parts.length >= 2) {
                     int spotId = Integer.parseInt(parts[0]);
                     boolean isOccupied = Boolean.parseBoolean(parts[1]);
+                    double hourlyRate = parts.length == 3 ? Double.parseDouble(parts[2]) : 5.0;
                     
-                    ParkingSpot spot = new ParkingSpot(spotId);
+                    ParkingSpot spot = new ParkingSpot(spotId, hourlyRate);
                     if (isOccupied) {
                         spot.occupy();
                     }

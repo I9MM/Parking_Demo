@@ -1,6 +1,7 @@
 package ui;
 
 import model.ExitOperator;
+import model.ParkingSpot;
 import model.Ticket;
 import security.AuthorizationService;
 import service.ParkingService;
@@ -160,7 +161,18 @@ public class ExitOperatorDashboard extends JFrame {
             Ticket ticket = parkingService.findTicketById(ticketId);
             
             if (ticket != null) {
-                double payment = operator.processPayment(ticket);
+                // Get the parking spot to get its hourly rate
+                ParkingSpot spot = null;
+                for (ParkingSpot s : parkingService.getAllSpots()) {
+                    if (s.getSpotId() == ticket.getSpotId()) {
+                        spot = s;
+                        break;
+                    }
+                }
+                
+                double hourlyRate = spot != null ? spot.getHourlyRate() : 5.0;
+                ticket.setTimeOut(java.time.LocalDateTime.now()); // Set exit time
+                double payment = operator.processPayment(ticket, hourlyRate);
                 currentTicketId = ticketId;
                 
                 StringBuilder details = new StringBuilder();
@@ -169,10 +181,13 @@ public class ExitOperatorDashboard extends JFrame {
                 details.append("========================================\n\n");
                 details.append("Ticket ID:      ").append(ticket.getEntryId()).append("\n");
                 details.append("Parking Spot:   ").append(ticket.getSpotId()).append("\n");
+                details.append("Hourly Rate:    ").append(String.format("%.2f EGP/hour", hourlyRate)).append("\n");
                 details.append("Plate Number:   ").append(ticket.getCar().getPlateNumber()).append("\n");
                 details.append("Owner Name:     ").append(ticket.getCar().getOwnerName()).append("\n");
                 details.append("National ID:    ").append(ticket.getCar().getNId()).append("\n");
+                details.append("\n");
                 details.append("Entry Time:     ").append(ticket.getTimeIn().toString().substring(0, 16)).append("\n");
+                details.append("Exit Time:      ").append(ticket.getTimeOut().toString().substring(0, 16)).append("\n");
                 details.append("\n----------------------------------------\n");
                 details.append("PAYMENT AMOUNT: ").append(String.format("%.2f EGP", payment)).append("\n");
                 details.append("----------------------------------------\n");
